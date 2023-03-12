@@ -1,0 +1,21 @@
+- name: "course end project"
+  hosts: project
+  become: yes
+  tasks:
+          - name: "install java"
+            apt:
+                    name: openjdk-11-jdk
+                    update_cache: yes
+          - name: "install Python"
+            apt:
+                    name: python3
+          - name: "configure system to install jenkins"
+            shell:
+                    cmd: 'curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null' 
+          - name: "configure system to install jenkins -1"
+            shell:
+                    cmd: 'echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/ | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null'
+          - name: "install Jenkins"
+            apt:
+                    name: jenkins
+                    update_cache: yes

@@ -1,0 +1,19 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('Validate YAML syntax') {
+            steps {
+                sh 'yamllint my-deployment.yaml'
+            }
+        }
+        
+        stage('Deploy container') {
+            steps {
+                // Include the steps to deploy the container
+            }
+        }
+        
+        // Include additional stages as needed
+    }
+}

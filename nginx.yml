@@ -1,0 +1,62 @@
+---
+- name: Deploy NGINX container to EC2 instance
+  hosts: project
+  become: true
+  vars:
+    container_name: my-nginx-container
+    image_name: my-nginx-image
+    port_mappings: "30100:80"
+    jenkins_url: http://localhost:8080/
+    jenkins_job_name: my-nginx-test 
+    git_repo_url: https://github.com/mohieddinekhaled/my-nginx-repo.git
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+    - name: Start Docker service
+      systemd:
+        name: docker
+        state: started
+    - name: Pull Docker image
+      docker_image:
+        name: "{{ image_name }}"
+        state: present
+    - name: Create Docker container
+      docker_container:
+        name: "{{ container_name }}"
+        image: "{{ image_name }}"
+        state: started
+        restart_policy: always
+        published_ports: "{{ port_mappings }}"
+    - name: Run Jenkins test
+        uri:
+        url: "{{ jenkins_url }}/job/{{ jenkins_job_name }}/build?delay=0sec"
+        method: POST
+        user: admin
+        password: admin
+        return_content: yes
+        register: response
+        until: response.status == 201 or response.status == 302
+        retries: 10
+        delay: 10
+    - name: Login to Docker Hub docker_login: 
+        registry:  https://index.docker.io/v1/ 
+        username: myusername           
+        password: mypassword     -   
+    - name: Tag Docker image docker_image: 
+        name: "{{ image_name }}" 
+        tag: latest 
+        repository: "{{ git_repo_url }}"
+    - name: Push Docker image 
+        docker_push: 
+             name: "{{ git_repo_url }}:latest" 
+    - name: Stop and remove Docker container
+        docker_container:
+           name: "{{ container_name }}"
+           state: stopped
+           force_kill: yes
+    - name: Remove Docker container
+        docker_container:
+           name: "{{ container_name }}"
+           state: absent
